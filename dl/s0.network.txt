@@ -1,0 +1,41 @@
+# cd /etc/network && cp interfaces.ok interfaces && /etc/init.d/networking restart
+auto lo
+iface lo inet loopback
+
+auto eth0
+#real IP address1
+iface eth0 inet static
+address 212.103.62.10
+netmask 24
+gateway 212.103.62.1
+
+auto eth1
+#real IP address2
+iface eth1 inet static
+address 111.111.111.222
+netmask 24
+gateway 212.103.62.1
+
+auto vmbr0
+#private sub network
+iface vmbr0 inet static
+address 10.0.0.1
+netmask 255.255.255.0
+bridge_ports none
+bridge_stp off
+bridge_fd 0
+
+post-up echo 1 > /proc/sys/net/ipv4/ip_forward
+post-up iptables -t nat -A POSTROUTING -s '10.0.0.0/25' -o eth0 -j MASQUERADE
+post-down iptables -t nat -D POSTROUTING -s '10.0.0.0/25' -o eth0 -j MASQUERADE
+
+auto vmbr1
+#private sub network
+iface vmbr1 inet static
+address 10.0.0.254
+netmask 255.255.255.0
+bridge_ports none
+bridge_stp off
+bridge_fd 0
+post-up iptables -t nat -A POSTROUTING -s '10.0.0.193/26' -o eth1 -j MASQUERADE
+post-down iptables -t nat -D POSTROUTING -s '10.0.0.193/26' -o eth1 -j MASQUERADE
